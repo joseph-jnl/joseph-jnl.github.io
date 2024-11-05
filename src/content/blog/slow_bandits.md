@@ -64,22 +64,22 @@ Although multiprocessing ran its course, I thought there was probably quite a bi
 austin -C -i 1ms python run.py run.steps=1000 run.n_runs=20 | sed '/^#/d' | ~/projects/FlameGraph/flamegraph.pl --countname=μs > fg_v1_original.svg`  
 ```
 We can pretty easily pick out the 8 different process pool stacks running our bandits in parallel on the right side of the flamegraph.  
-![](https://github.com/user-attachments/assets/63c57847-0d50-4491-8f88-c63e9a4dbce1)
+[![](https://github.com/user-attachments/assets/63c57847-0d50-4491-8f88-c63e9a4dbce1)](https://github.com/user-attachments/assets/63c57847-0d50-4491-8f88-c63e9a4dbce1)
 
 A closer zoom into one of the individual process pools reveals something puzzling- our code is spending a lot of time (ie the length of the xaxis on a flamegraph will correlate to how long a particular portion of code runs based on how often it was sampled by the profiler) interacting with the omegaconf dictionary objects I used for [configuring](https://github.com/joseph-jnl/rlbook/blob/4726e971d9fd60d67691ffc62bc54d701801011f/experiments/ch2_bandits/run.py#L136) my experiment runs via [yaml](https://github.com/joseph-jnl/rlbook/blob/dev/experiments/ch2_bandits/configs/defaults.yaml) files and [hydra](https://hydra.cc/).  
 [![](https://github.com/user-attachments/assets/5550980b-814e-45f8-bb9e-085a0888cd35)](https://github.com/user-attachments/assets/5550980b-814e-45f8-bb9e-085a0888cd35)
 
 I didn't realize taking advantage of the hydra [class instantiation](https://hydra.cc/docs/1.1/advanced/instantiate_objects/overview/#internaldocs-banner) feature by default actually ports the omegaconf object rather than a pure python dict. Apparently this came with a significant amount of overhead as a simple 2 line change to convert to a simple python dict resulted in a large performance gain- what was taking over 100 seconds was now clocking in at less than 10:  
-![](https://github.com/user-attachments/assets/15777d16-860a-4e48-9b21-421ef0a100f6)  
-![](https://github.com/user-attachments/assets/874bc5cd-49a6-4bb8-96ab-e7a76cb0fc43)
+[![](https://github.com/user-attachments/assets/15777d16-860a-4e48-9b21-421ef0a100f6)](https://github.com/user-attachments/assets/15777d16-860a-4e48-9b21-421ef0a100f6)
+[![](https://github.com/user-attachments/assets/874bc5cd-49a6-4bb8-96ab-e7a76cb0fc43)](https://github.com/user-attachments/assets/874bc5cd-49a6-4bb8-96ab-e7a76cb0fc43)
 
 ## Beware diligent fstrings
 
 The bandit runs that were originally taking up the majority of the processing time were now comfortably taking a back seat to the actual setup (e.g. wandb) and package imports seen on the left hand side of the flamegraph.   
-![](https://github.com/user-attachments/assets/3b5c05c3-3b1d-4230-84ab-43c810395c8c)
+[![](https://github.com/user-attachments/assets/3b5c05c3-3b1d-4230-84ab-43c810395c8c)](https://github.com/user-attachments/assets/3b5c05c3-3b1d-4230-84ab-43c810395c8c)
 
 Zooming in again onto the top of the stack for a single process, it appeared that my home spun implementation of argmax (with its head scratching assortment of type conversion) was the next bottleneck to tackle.  
-![](https://github.com/user-attachments/assets/96eef3bf-a8a1-467e-96d3-76b2f27b8c25)
+[![](https://github.com/user-attachments/assets/96eef3bf-a8a1-467e-96d3-76b2f27b8c25)](https://github.com/user-attachments/assets/96eef3bf-a8a1-467e-96d3-76b2f27b8c25)
 
 ```python  
 	def argmax(self, Q):  
@@ -97,10 +97,10 @@ Zooming in again onto the top of the stack for a single process, it appeared tha
 
 Swapping it out for the numpy implementation of [argmax](https://numpy.org/doc/2.0/reference/generated/numpy.argmax.html) took some rearranging to consistently handle numpy arrays rather than an eclectic mix of lists, dicts, and pandas dataframes sprinkled throughout the codebase. The refactor was well worth it after seeing the final result of 3 time slower runs.
 
-![](https://github.com/user-attachments/assets/aec20150-6241-43e1-afce-551f04935052)
+[![](https://github.com/user-attachments/assets/aec20150-6241-43e1-afce-551f04935052)](https://github.com/user-attachments/assets/aec20150-6241-43e1-afce-551f04935052)
 
 Slower wasn't quite the direction I was aiming for here. Taking the profiler again, I noticed interesting references to printing arrays for some reason:  
-![](https://github.com/user-attachments/assets/c63eba7b-88bb-465e-9dd3-16fe3b487b3f)
+[![](https://github.com/user-attachments/assets/c63eba7b-88bb-465e-9dd3-16fe3b487b3f)](https://github.com/user-attachments/assets/c63eba7b-88bb-465e-9dd3-16fe3b487b3f)
 
 It turns out [fstrings in debug logging statements are not lazy.](https://google.github.io/styleguide/pyguide.html#3101-logging) I had added some additional logging while refactoring in the numpy array arrays which were apparently always evaluating even when not running the logger in DEBUG mode: ![](https://github.com/user-attachments/assets/6ce4f82a-7163-4a3d-a7f4-2742bf278374)
 
@@ -108,7 +108,7 @@ It turns out [fstrings in debug logging statements are not lazy.](https://google
 
 One last look through the profiler and our bandits are now humming along so fast that the process stacks are no longer even showing up as distinct stacks\! Most of what the flamegraph has sampled now consists of import statements rather than the actual bandit runs themselves, which seems like a good stopping point for our performance refactor as we've probably picked the low hanging fruit (and I want an excuse to go back to implementing rather than writing\!). 
 
-![](https://github.com/user-attachments/assets/a9eb5ff6-b7de-46b1-841f-328c9deaeb26)
+[![](https://github.com/user-attachments/assets/a9eb5ff6-b7de-46b1-841f-328c9deaeb26)](https://github.com/user-attachments/assets/a9eb5ff6-b7de-46b1-841f-328c9deaeb26)
 
 ![](https://github.com/user-attachments/assets/06bebc4d-49c1-4a3a-be34-3b5caf340d01)
 
