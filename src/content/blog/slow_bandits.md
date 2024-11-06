@@ -21,7 +21,7 @@ To be clear, slow code can still very much be useful code:
 * Implementing a quick yet unoptimized proof of concept now rather than later, particularly when the later often converges towards never, has a quality of its own. Perfect is the enemy of side project blog posts, so it goes.  
 * Readability- although slow code doesn't guarantee readable code, I have a learned association between "optimized" code, holes in feet, and noodles hidden in the dark corners of boxes.
 
-Slow is also relative. A single run of 1000 steps was timing in at 250 ms which seemed finetm at first glance. 
+Slow is also relative. A single run of 1000 steps was timing in at 250 ms which seemed fine :tm: at first glance. 
 
 ## Too Slow Code
 
@@ -53,7 +53,8 @@ and we can immediately observe:
 
 Looks like we've hit [Amdahl's Law](https://en.wikipedia.org/wiki/Amdahl%27s_law):   
 > the overall performance improvement gained by optimizing a single part of a system is limited 
-> by the fraction of time that the improved part is actually used  
+> by the fraction of time that the improved part is actually used
+
 Parallel programming is hard.
 
 ## Profilers and Flamegraphs
@@ -99,7 +100,7 @@ Swapping it out for the numpy implementation of [argmax](https://numpy.org/doc/2
 
 [![](https://github.com/user-attachments/assets/aec20150-6241-43e1-afce-551f04935052)](https://github.com/user-attachments/assets/aec20150-6241-43e1-afce-551f04935052)
 
-Slower wasn't quite the direction I was aiming for here. Taking the profiler again, I noticed interesting references to printing arrays for some reason:  
+Slower wasn't quite the direction I was aiming for here. Taking the profiler out again, I noticed some interesting references to printing arrays for some reason:  
 [![](https://github.com/user-attachments/assets/c63eba7b-88bb-465e-9dd3-16fe3b487b3f)](https://github.com/user-attachments/assets/c63eba7b-88bb-465e-9dd3-16fe3b487b3f)
 
 It turns out [fstrings in debug logging statements are not lazy.](https://google.github.io/styleguide/pyguide.html#3101-logging) I had added some additional logging while refactoring in the numpy array arrays which were apparently always evaluating even when not running the logger in DEBUG mode: ![](https://github.com/user-attachments/assets/6ce4f82a-7163-4a3d-a7f4-2742bf278374)
