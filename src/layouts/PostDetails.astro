@@ -8,6 +8,7 @@ import type { CollectionEntry } from "astro:content";
 import { slugifyStr } from "@utils/slugify";
 import ShareLinks from "@components/ShareLinks.astro";
 import { SITE } from "@config";
+import Comments from "@components/Comments";
 
 export interface Props {
   post: CollectionEntry<"blog">;
@@ -98,21 +99,7 @@ const layoutProps = {
 
     </div>
 
-    <script src="https://giscus.app/client.js"
-            data-repo="joseph-jnl/joseph-jnl.github.io"
-            data-repo-id="R_kgDOLRGwGQ"
-            data-category="Announcements"
-            data-category-id="DIC_kwDOLRGwGc4CkA8W"
-            data-mapping="pathname"
-            data-strict="1"
-            data-reactions-enabled="1"
-            data-emit-metadata="0"
-            data-input-position="bottom"
-            data-theme="preferred_color_scheme"
-            data-lang="en"
-            crossorigin="anonymous"
-            async>
-    </script>
+    <Comments client:only="react" />
 
   </main>
   <Footer />

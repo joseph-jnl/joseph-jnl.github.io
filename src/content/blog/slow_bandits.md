@@ -21,7 +21,7 @@ To be clear, slow code can still very much be useful code:
 * Implementing a quick yet unoptimized proof of concept now rather than later, particularly when the later often converges towards never, has a quality of its own. Perfect is the enemy of side project blog posts, so it goes.  
 * Readability- although slow code doesn't guarantee readable code, I have a learned association between "optimized" code, holes in feet, and noodles hidden in the dark corners of boxes.
 
-Slow is also relative. A single run of 1000 steps was timing in at 250 ms which seemed fine :tm: at first glance. 
+Slow is also relative. A single run of 1000 steps was timing in at 250 ms which seemed fine at first glance. 
 
 ## Too Slow Code
 
